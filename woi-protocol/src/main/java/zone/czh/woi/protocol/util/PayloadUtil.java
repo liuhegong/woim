@@ -45,6 +45,9 @@ public class PayloadUtil {
     public static Payload buildPayload(Object obj,String cmd,boolean responseRequired){
         return buildPayload(obj,cmd, Payload.Type.REQUEST,responseRequired,-1);
     }
+    public static Payload buildResponse(Object obj,long respondSn){
+        return buildPayload(obj,Payload.Cmd.RESPONSE, Payload.Type.RESPONSE,false,respondSn);
+    }
     //response
     public static Payload buildPayload(Object obj,String cmd,long respondSn){
         return buildPayload(obj,cmd, Payload.Type.RESPONSE,false,respondSn);
