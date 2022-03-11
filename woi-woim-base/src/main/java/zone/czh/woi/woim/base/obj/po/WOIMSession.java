@@ -24,14 +24,14 @@ import java.util.Objects;
 @NoArgsConstructor
 @Accessors(chain = true)
 public class WOIMSession implements Serializable {
-
+    //应该通过hostip和cid唯一确定会话
     @Id
     @GeneratedValue(generator = "JDBC")
     Long id;
     @Column
     String uid;
     @Column
-    String cid;
+    String cid;//channel id 在相同主机下唯一
     @Column
     Integer channelType;
     @Column

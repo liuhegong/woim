@@ -19,14 +19,14 @@ import java.util.Map;
 public class WOIMIntent {
     @Accessors(chain = true)
     String cmd;
-    Map<String, Pair> extra;
+    Map<String, Pair> extras;
     public Object getExtra(String key){
         try {
-            if (extra==null){
+            if (extras ==null){
                 return null;
             }
             ObjectMapper objectMapper = new ObjectMapper();
-            Pair pair = extra.get(key);
+            Pair pair = extras.get(key);
             String className = pair.getKey();
             String json = pair.getValue();
             return objectMapper.readValue(json, Class.forName(className));
@@ -41,13 +41,13 @@ public class WOIMIntent {
             if (value==null){
                 return this;
             }
-            if (extra==null){
-                extra = new HashMap<>();
+            if (extras ==null){
+                extras = new HashMap<>();
             }
             ObjectMapper objectMapper = new ObjectMapper();
             String json = objectMapper.writeValueAsString(value);
             Pair pair = new Pair(value.getClass().getName(),json);
-            extra.put(key,pair);
+            extras.put(key,pair);
         }catch (Exception e){
             e.printStackTrace();
             return this;
