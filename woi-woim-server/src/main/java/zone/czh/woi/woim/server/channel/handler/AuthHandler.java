@@ -9,6 +9,7 @@ import zone.czh.woi.protocol.protocol.Payload;
 import zone.czh.woi.protocol.protocol.WoiProtobuf;
 import zone.czh.woi.protocol.util.PayloadUtil;
 import zone.czh.woi.woim.base.obj.vo.Packet;
+import zone.czh.woi.woim.server.Exception.VerifyException;
 import zone.czh.woi.woim.server.WOIMServer;
 import zone.czh.woi.woim.server.constant.AttributeKeyConstant;
 import zone.czh.woi.woim.server.util.AttributeKeyUtil;
@@ -35,25 +36,31 @@ public class AuthHandler extends SimpleChannelInboundHandler<WoiProtobuf.Payload
             if (verifier!=null){
                 Packet packet = new Packet(payload);
                 Object token = PayloadUtil.readValue(payload);
-                String cid = verifier.verify(channel,packet);
-                if (cid!=null){
-                    AttributeKeyUtil.set(channel, AttributeKeyConstant.CHANNEL_ID,cid);
-                    verifier.handleAuthSuccess(channel,packet);
-                    if (eventListener!=null){
-                        eventListener.onBeforeChannelBeingManaged(ctx.channel(),token);
+                try {
+                    String cid = verifier.verify(channel,packet);
+                    if (cid!=null){
+                        AttributeKeyUtil.set(channel, AttributeKeyConstant.CHANNEL_ID,cid);
+                        verifier.handleAuthSuccess(channel,packet);
+                        if (eventListener!=null){
+                            eventListener.onBeforeChannelBeingManaged(ctx.channel(),token);
+                        }
+                        woimServer.manage(channel,cid);
+                        ctx.pipeline().remove(this);
+                        if (eventListener!=null){
+                            eventListener.onAfterChannelBeingManaged(ctx.channel(),token);
+                        }
+                    }else {
+                        VerifyException e = new VerifyException("cid can not be null");
+                        verifier.handleAuthFailed(channel,packet,e);
+                        ctx.close();
                     }
-                    woimServer.manage(channel,cid);
-                    ctx.pipeline().remove(this);
-                    if (eventListener!=null){
-                        eventListener.onAfterChannelBeingManaged(ctx.channel(),token);
-                    }
-                }else {
-                    verifier.handleAuthFailed(channel,packet);
-                    ctx.close();
+                }catch (VerifyException e){
+                    verifier.handleAuthFailed(channel,packet,e);
                 }
+
             }else {
                 ctx.close();
-                throw new RuntimeException("verifier is null");
+                throw new RuntimeException("verifier can not be null");
             }
         }else {
             ctx.channel().writeAndFlush(PayloadUtil.buildPayload("unauthorized", Payload.Cmd.SYS,false));
@@ -70,7 +77,7 @@ public class AuthHandler extends SimpleChannelInboundHandler<WoiProtobuf.Payload
          * @param packet
          * @return channel id
          */
-        String verify(Channel channel, Packet packet);
+        String verify(Channel channel, Packet packet) throws VerifyException;
 
 
         /**
@@ -84,8 +91,9 @@ public class AuthHandler extends SimpleChannelInboundHandler<WoiProtobuf.Payload
          * 授权成功 可在此对channel进行属性设置等
          * @param channel
          * @param packet
+         * @param e
          */
-        void handleAuthFailed(Channel channel, Packet packet);
+        void handleAuthFailed(Channel channel, Packet packet,VerifyException e);
     }
 
 }

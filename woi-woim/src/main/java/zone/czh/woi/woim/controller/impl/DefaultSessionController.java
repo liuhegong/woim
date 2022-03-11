@@ -19,9 +19,10 @@ public class DefaultSessionController implements SessionController {
     @Autowired
     SessionService sessionService;
 
+    //关闭本地session
     @PostMapping(WOIMUrl.Session.PATH_CLOSE_SESSION)
     public Response closeSession(@RequestBody WOIMSession session){
-        sessionService.closeSession(session);
+        sessionService.closeLocalSession(session);
         return new Response<>();
     }
 

@@ -15,12 +15,14 @@ public interface SessionService {
 
     WOIMSession getSession(String uid, String cid);
 
+
+
     void createSession(WOIMSession session);
 
-    void closeSession(WOIMSession session);
+    void closeLocalSession(WOIMSession session);
 
 
-    void closeSession(String uid, String cid);
+    void closeLocalSession(String uid, String cid);
 
     void closeChannel(String cid);
 

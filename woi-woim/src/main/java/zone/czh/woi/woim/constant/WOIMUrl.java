@@ -6,12 +6,12 @@ package zone.czh.woi.woim.constant;
 */
 public class WOIMUrl {
     public static class Push{
-        public static final String MODULE = "/push";
-        public static final String PATH_PUSH_DISTRIBUTED = "/push-distributed";
+        public static final String MODULE = "/woim-push";
+        public static final String PATH_PUSH = "/push";
     }
 
     public static class Session{
-        public static final String MODULE = "/session";
+        public static final String MODULE = "/woim-session";
         public static final String PATH_CLOSE_SESSION = "/close";
         public static final String PATH_KICK_OFF = "/kick-off";
     }
@@ -46,9 +46,10 @@ public class WOIMUrl {
         public static final String PATH_DEMOTE_MEMBER = "/demote-member";
     }
 
-    public static class Distributed{
-        public static final String MODULE = "/woim-distributed";
+    public static class Router {
+        public static final String MODULE = "/woim-router";//因为是默认生效，以防与用户占用url，则加woim前缀
         public static final String PATH_PUSH = "/push";
         public static final String PATH_CLOSE_SESSION = "/close-session";
     }
+
 }

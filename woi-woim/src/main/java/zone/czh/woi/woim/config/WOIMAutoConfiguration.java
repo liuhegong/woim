@@ -65,8 +65,18 @@ public class WOIMAutoConfiguration implements ApplicationListener<ApplicationSta
 //    controller config
     @Bean
     @ConditionalOnMissingBean
-    public DistributedController distributedController(){
-        return new DefaultDistributedController();
+    public RouterController routerController(){
+        return new DefaultRouterController();
+    }
+    @Bean
+    @ConditionalOnMissingBean
+    public PushController pushController(){
+        return new DefaultPushController();
+    }
+    @Bean
+    @ConditionalOnMissingBean
+    public SessionController sessionController(){
+        return new DefaultSessionController();
     }
 //    service config
     @Bean
@@ -92,6 +102,10 @@ public class WOIMAutoConfiguration implements ApplicationListener<ApplicationSta
     @Bean
     DistributedMsgService distributedMsgService(PushService pushService, MessageService messageService,@Nullable CustomMsgService customMsgService){
         return new DistributedMsgService().setPushService(pushService).setMessageService(messageService).setCustomMsgService(customMsgService);
+    }
+    @Bean
+    public RouterService routerService(){
+        return new RouterServiceImpl();
     }
 //    woim config
     @Bean

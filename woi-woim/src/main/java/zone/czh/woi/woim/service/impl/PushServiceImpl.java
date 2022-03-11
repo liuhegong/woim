@@ -8,6 +8,7 @@ import zone.czh.woi.woim.base.obj.vo.SessionState;
 import zone.czh.woi.woim.distributed.agent.Agent;
 import zone.czh.woi.woim.server.WOIMServer;
 import zone.czh.woi.woim.service.inter.PushService;
+import zone.czh.woi.woim.service.inter.RouterService;
 import zone.czh.woi.woim.service.inter.SessionService;
 
 import java.util.HashMap;
@@ -28,7 +29,8 @@ public class PushServiceImpl implements PushService {
     SessionService sessionService;
     @Autowired
     Agent agent;
-
+    @Autowired
+    RouterService routerService;
 
 
     @Override
@@ -51,17 +53,16 @@ public class PushServiceImpl implements PushService {
 
     @Override
     public void pushDistributed(String uid, Object data, OfflineHandler offlineHandler) {
-        List<WOIMSession> sessions = sessionService.getSessions(uid);
+        List<WOIMSession> sessions = sessionService.getSessions(uid);//可能多端在线
 
         if (sessions==null||sessions.size()==0){
             handleOffline(offlineHandler);
-            return;
         }else {
             for (WOIMSession session:sessions){
                 pushDistributed(session,data,offlineHandler);
             }
-            return;
         }
+        return;
 
     }
 
@@ -73,18 +74,24 @@ public class PushServiceImpl implements PushService {
     @Override
     public SessionState pushDistributed(WOIMSession session, Object data, OfflineHandler offlineHandler) {
         if (session!=null){
-            if (WoiNetUtil.isLocal(session.getHostIp())){
-                return push(session.getCid(),data,offlineHandler);
-            }else {
-                return callRemotePushService(session,data,offlineHandler);
+//            if (WoiNetUtil.isLocal(session.getHostIp())){
+//                return push(session.getCid(),data,offlineHandler);
+//            }else {
+//                return callRemotePushService(session,data,offlineHandler);
+//            }
+            //todo redirect to router
+            SessionState sessionState = routerService.push(session, data);
+            if (sessionState.getState()==SessionState.OFFLINE){
+                handleOffline(offlineHandler);
             }
+            return sessionState;
         }else {
             handleOffline(offlineHandler);
             return new SessionState(SessionState.OFFLINE);
         }
     }
 
-    @Override
+//    @Override
     public SessionState callRemotePushService(WOIMSession session, Object data, OfflineHandler offlineHandler) {
         try {
             Map<Agent.Key,Object> params = new HashMap<>();

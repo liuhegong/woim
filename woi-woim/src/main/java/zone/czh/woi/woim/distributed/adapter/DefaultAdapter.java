@@ -23,8 +23,8 @@ public class DefaultAdapter extends Adapter {
     private ParameterizedTypeReference closeSessionReference =  new ParameterizedTypeReference<Response>(){};
 
     public DefaultAdapter(){
-        path.put(Agent.Service.PUSH, WOIMUrl.Distributed.MODULE+WOIMUrl.Distributed.PATH_PUSH);
-        path.put(Agent.Service.CLOSE_SESSION,WOIMUrl.Distributed.MODULE+WOIMUrl.Distributed.PATH_CLOSE_SESSION);
+        path.put(Agent.Service.PUSH, WOIMUrl.Push.MODULE+ WOIMUrl.Push.PATH_PUSH);
+        path.put(Agent.Service.CLOSE_SESSION, WOIMUrl.Session.MODULE+ WOIMUrl.Session.PATH_CLOSE_SESSION);
     }
 
     @Override

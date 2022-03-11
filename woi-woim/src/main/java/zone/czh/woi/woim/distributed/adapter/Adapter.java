@@ -1,5 +1,6 @@
 package zone.czh.woi.woim.distributed.adapter;
 
+import lombok.Getter;
 import zone.czh.woi.woim.distributed.agent.Agent;
 import zone.czh.woi.woim.vo.RequestInfo;
 
@@ -10,9 +11,10 @@ import java.util.Map;
 *@Description: None
 *@author woi
 */
+@Getter
 public abstract class Adapter {
 
-    Map<Agent.Service,String> path;
+    public Map<Agent.Service,String> path;
 
 
     public Adapter(){

@@ -7,9 +7,13 @@ import io.netty.handler.timeout.IdleStateEvent;
 import io.netty.util.AttributeKey;
 import lombok.AllArgsConstructor;
 import lombok.Data;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import zone.czh.woi.protocol.util.PayloadUtil;
 import zone.czh.woi.woim.base.constant.WOIMConfig;
 import zone.czh.woi.woim.server.WOIMServer;
 import zone.czh.woi.woim.server.constant.AttributeKeyConstant;
+import zone.czh.woi.woim.server.util.AttributeKeyUtil;
 
 import java.util.concurrent.TimeUnit;
 
@@ -23,6 +27,8 @@ import java.util.concurrent.TimeUnit;
 @ChannelHandler.Sharable
 public class ConnectionStateHandler extends ChannelInboundHandlerAdapter {
 
+    private static final Logger LOGGER = LoggerFactory.getLogger(ConnectionStateHandler.class);
+
     private WOIMServer.EventListener eventListener;
 
     @Override
@@ -33,10 +39,8 @@ public class ConnectionStateHandler extends ChannelInboundHandlerAdapter {
             String id = ctx.channel().attr(cid).get();
             if (id==null){
                 ctx.close();
-            }else {
-                // TODO: 2021/4/3 log
+                LOGGER.info("Close channel {} for unauthorized",cid);
             }
-
         }, WOIMConfig.AUTH_EXPIRED_SECONDS, TimeUnit.SECONDS);
     }
 
@@ -55,7 +59,16 @@ public class ConnectionStateHandler extends ChannelInboundHandlerAdapter {
         if (evt instanceof IdleStateEvent){
             switch (((IdleStateEvent) evt).state()){
                 case READER_IDLE:
-                    ctx.channel().close();
+                    String uid = AttributeKeyUtil.get(ctx.channel(), AttributeKeyConstant.USER_ID, String.class);
+                    String cid = AttributeKeyUtil.get(ctx.channel(), AttributeKeyConstant.CHANNEL_ID, String.class);
+                    LOGGER.info("Channel uid:{} cid:{} reader idle");
+                    try {
+                        //尝试服务端主动发送心跳包
+                        ctx.channel().writeAndFlush(PayloadUtil.buildHeartbeat());
+                    }catch (Exception e){
+                        ctx.channel().close();
+                        LOGGER.info("Close channel uid:{} cid:{} for reader idle",uid,cid);
+                    }
                     break;
                 case WRITER_IDLE:
                     break;

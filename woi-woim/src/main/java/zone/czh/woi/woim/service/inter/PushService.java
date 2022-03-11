@@ -15,7 +15,6 @@ public interface PushService {
     void pushDistributed(String uid, Object data, OfflineHandler offlineHandler);
     SessionState pushDistributed(WOIMSession session, Object data);
     SessionState pushDistributed(WOIMSession session, Object data, OfflineHandler offlineHandler);
-    SessionState callRemotePushService(WOIMSession session, Object data, OfflineHandler offlineHandler);
     interface OfflineHandler {
         void handleOffline();
     }

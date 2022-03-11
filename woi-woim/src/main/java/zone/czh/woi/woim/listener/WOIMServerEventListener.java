@@ -68,7 +68,7 @@ public class WOIMServerEventListener implements WOIMServer.EventListener {
 
         InetSocketAddress localAddress = (InetSocketAddress)channel.localAddress();
         InetSocketAddress remoteAddress = (InetSocketAddress)channel.remoteAddress();
-
+//        创建channel后生成会话信息
         WOIMSession woimSession = new WOIMSession().setUid(uid)
                 .setCid(cid)
                 .setChannelType(channelType)
@@ -91,7 +91,7 @@ public class WOIMServerEventListener implements WOIMServer.EventListener {
         String cid = AttributeKeyUtil.get(channel, AttributeKeyConstant.CHANNEL_ID, String.class);
         String uid = AttributeKeyUtil.get(channel, AttributeKeyConstant.USER_ID, String.class);
         if (uid!=null&&cid!=null){
-            sessionService.closeSession(uid,cid);
+            sessionService.closeLocalSession(uid,cid);
         }
     }
 

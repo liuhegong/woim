@@ -1,5 +1,7 @@
 package zone.czh.woi.woim.distributed.agent;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.client.RestTemplate;
 import zone.czh.woi.woim.distributed.adapter.DefaultAdapter;
@@ -14,6 +16,7 @@ import java.util.Map;
 *@author woi
 */
 public class DefaultAgent implements Agent{
+    private static final Logger LOGGER = LoggerFactory.getLogger(DefaultAgent.class);
     String[] serverAddr;
     RestTemplate restTemplate = new RestTemplate();
     private Adapter defAdapter;
@@ -25,6 +28,12 @@ public class DefaultAgent implements Agent{
         reload();
     }
 
+    public DefaultAgent(String[] serverAddr,Adapter defAdapter){
+        this.serverAddr=serverAddr;
+        this.defAdapter=defAdapter;
+        reload();
+    }
+
     public <T> T call(String hostIp, Service service, Map<Key,Object> params, Class<T> resType) throws Exception {
         Adapter adapter = adapterMap.get(hostIp);
         if (adapter==null){
@@ -32,8 +41,10 @@ public class DefaultAgent implements Agent{
         }
         if (adapter!=null){
             RequestInfo requestInfo = adapter.getRequestInfo(service, params);
+            String url = getUrl(hostIp, requestInfo.getPath());
+            LOGGER.info("Agent call url:{}"+url);
             ResponseEntity entity = restTemplate.exchange(
-                    getUrl(hostIp, requestInfo.getPath()),
+                    url,
                     requestInfo.getMethod(),
                     requestInfo.getHttpEntity(),
                     requestInfo.getReference(),
@@ -48,6 +59,8 @@ public class DefaultAgent implements Agent{
         this.serverAddr=serverAddr;
         reload();
     }
+
+
 
     private void reload(){
         if (serverAddrMap==null){

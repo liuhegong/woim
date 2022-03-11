@@ -12,6 +12,7 @@ import zone.czh.woi.woim.listener.WOIMEventListener;
 import zone.czh.woi.woim.mapper.WOIMSessionMapper;
 import zone.czh.woi.woim.server.WOIMServer;
 import zone.czh.woi.woim.service.inter.PushService;
+import zone.czh.woi.woim.service.inter.RouterService;
 import zone.czh.woi.woim.service.inter.SessionService;
 import zone.czh.woi.woim.session.storage.LocalSessionStorage;
 
@@ -36,10 +37,24 @@ public class SessionServiceImpl implements SessionService {
     private WOIMEventListener woimEventListener;
     @Autowired
     private Agent agent;
-
-//    private Map<String,Map<String,WOIMSession>> tempSessionStorage = new ConcurrentHashMap<>();
     @Autowired
-    private LocalSessionStorage localSessionStorage;
+    private RouterService routerService;
+    @Autowired
+    private LocalSessionStorage localSessionStorage;//相当于缓存
+
+    /**
+     * 关键方法！
+     * 关闭本地channel
+     * 应该确保是本地的channel
+     * @param cid
+     */
+    @Override
+    public void closeChannel(String cid) {
+        woimServer.closeChannel(cid);
+    }
+
+
+
     @Override
     public List<WOIMSession> getSessions(String uid){
         return woimSessionMapper.select(new WOIMSession().setUid(uid));
@@ -79,30 +94,17 @@ public class SessionServiceImpl implements SessionService {
 //            }
 //            userSessionMap.put(cid,session);
 //            tempSessionStorage.put(session.getUid(),userSessionMap);
-            localSessionStorage.storeSession(session);
-            woimSessionMapper.insertSelective(session);
+            localSessionStorage.storeSession(session);//本地缓存一份
+            woimSessionMapper.insertSelective(session);//数据库插入一份
         }
     }
 
     @Transactional
     @Override
-    public void closeSession(WOIMSession session) {
+    public void closeLocalSession(WOIMSession session) {
         if (session!=null){
-            String hostIp = session.getHostIp();
-            if (WoiNetUtil.isLocal(hostIp)){
-                removeWOIMSession(session);
-                closeChannel(session.getCid());
-            }else {
-                try {
-                    Map<Agent.Key,Object> params = new HashMap<>();
-                    params.put(Agent.Key.CLOSE_SESSION_KEY_WOIMSESSION,session);
-                    agent.call(session.getHostIp(),Agent.Service.CLOSE_SESSION,params,void.class);
-                }catch (Exception e){
-                    e.printStackTrace();
-                    return;
-                }
-
-            }
+            removeWOIMSession(session);
+            closeChannel(session.getCid());
             woimEventListener.onSessionClosed(session);
         }
     }
@@ -110,20 +112,14 @@ public class SessionServiceImpl implements SessionService {
 
 
     @Override
-    public void closeSession(String uid,String cid) {
-        WOIMSession session = getSession(uid, cid);
-        closeSession(session);
+    public void closeLocalSession(String uid, String cid) {
+//        WOIMSession session = getSession(uid, cid);
+        //以防搞混，就不用getsession了
+        WOIMSession session = localSessionStorage.getSession(uid, cid);
+        closeLocalSession(session);
     }
 
-    /**
-     * 关闭本地channel
-     * 确保是本地的channel
-     * @param cid
-     */
-    @Override
-    public void closeChannel(String cid) {
-        woimServer.closeChannel(cid);
-    }
+
 
 
     @Override
@@ -171,7 +167,9 @@ public class SessionServiceImpl implements SessionService {
             }
             intent.putExtra(SystemIntent.KEY_KICK_OFF_MSG,msg);
             pushService.pushDistributed(session,intent);
-            closeSession(session);
+//            closeLocalSession(session);
+            //todo 下线功能会话可能不是存储在本地的，交由router层处理
+            routerService.closeSession(session);
         }
     }
 }

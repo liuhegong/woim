@@ -139,8 +139,8 @@ public class WOIMServer {
     }
 
     public interface EventListener{
-        public void onChannelUnregistered(ChannelHandlerContext ctx);
-        public void onChannelExceptionCaught(ChannelHandlerContext ctx, Throwable cause);
+        void onChannelUnregistered(ChannelHandlerContext ctx);
+        void onChannelExceptionCaught(ChannelHandlerContext ctx, Throwable cause);
          /**
          * 连接被正式管理前会调用此方法
          * @param channel
